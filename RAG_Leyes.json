@@ -1,0 +1,493 @@
+{
+  "name": "RAG Leyes",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1g0rvVAAjim0sRCwTzxEmUQnf-WciN7uM",
+          "mode": "list",
+          "cachedResultName": "RAG Leyes",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1g0rvVAAjim0sRCwTzxEmUQnf-WciN7uM"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -60
+      ],
+      "id": "4252d585-fa48-4908-8f50-ba2953f2ddfb",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wpNo0alJuRPUp9Ti",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "805d4437-e37b-44aa-920d-00e0021386c9",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -260,
+        -60
+      ],
+      "id": "b756fa4d-ce83-4d9c-ab6e-651a1de3e90a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -40,
+        -60
+      ],
+      "id": "bdc7e4c9-7d9a-4a8f-b108-c0162a6c8108",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wpNo0alJuRPUp9Ti",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        180,
+        -60
+      ],
+      "id": "a077e865-87d3-42df-bb80-741becb88204",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5a338b23-aedf-459c-865f-485b4dc18238",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "3f4f73a8-6d31-41a8-b12a-8933195876cc",
+              "name": "tittle",
+              "value": "={{ $('Google Drive Trigger').item.json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        -60
+      ],
+      "id": "5fe12856-8f0e-4c04-8f4e-328e1ffeabcf",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "documents_rag2",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        840,
+        -80
+      ],
+      "id": "5563afe6-41a0-4220-876c-5fdcc8f2089b",
+      "name": "Qdrant Vector Store",
+      "credentials": {
+        "qdrantApi": {
+          "id": "sFfERYppMeBnFNeA",
+          "name": "Local QdrantApi database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        800,
+        220
+      ],
+      "id": "894f0a83-419f-422d-b4dd-7e65f621b3ec",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "=Content: {{ $json.content }}\nTitulo:{{ $json.metadata.titulo }}\nCapitulo: {{ $json.metadata.capitulo }}\nArticulo: {{ $json.metadata.tipo }} - Numero: {{ $json.metadata.numero }}\nContenido del articulo: {{ $json.metadata.contenido }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        980,
+        120
+      ],
+      "id": "6ec13aad-053b-4808-b2ac-1f2fc7a4f59b",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 2000,
+        "chunkOverlap": 400
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        320
+      ],
+      "id": "00ac9317-276d-4c03-985b-48eb028cbbf2",
+      "name": "Character Text Splitter"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.text.replace(/\\n+/g, '\\n');\nconst lines = text.split('\\n');\nlet currentTitle = { number: null, name: null };\nlet currentChapter = { number: null, name: null };\nconst sections = [];\n\nfor (let i = 0; i < lines.length; i++) {\n  const line = lines[i].trim();\n  \n  // Detectar Títulos\n  if (/^TITULO\\s+[IVXLCDM]+$/i.test(line)) {\n    const titleNumber = line.match(/[IVXLCDM]+$/i)?.[0];\n    const titleName = lines[i + 1]?.trim() || \"\";\n    currentTitle = { number: titleNumber, name: titleName };\n    currentChapter = { number: null, name: null };\n    i++;\n    continue;\n  }\n\n  // Detectar Capítulos\n  if (/^CAPITULO\\s+\\d+$/i.test(line)) {\n    const chapterNumber = line.match(/\\d+$/i)?.[0];\n    const chapterName = lines[i + 1]?.trim() || \"\";\n    currentChapter = { number: chapterNumber, name: chapterName };\n    i++;\n    continue;\n  }\n\n  // Detectar Artículos y capturar contenido MULTILÍNEA\n  const articleMatch = line.match(/^Artículo\\s+(\\d+)\\.\\s*(.*)/i);\n  if (articleMatch) {\n    let articleContent = articleMatch[2];\n    let j = i + 1;\n\n    // Capturar líneas siguientes hasta el próximo artículo/título/capítulo\n    while (j < lines.length && \n           !lines[j].match(/^(Artículo|TITULO|CAPITULO)/i)) {\n      articleContent += \" \" + lines[j].trim().replace(/\\n/g, ' ');\n      j++;\n    }\n\n    sections.push({\n      content: `Artículo ${articleMatch[1]}. ${articleContent.trim()}`,\n      metadata: {\n        tipo: \"Artículo\",\n        numero: articleMatch[1],\n        contenido: articleContent.trim(),\n        titulo: currentTitle.number ? `Título ${currentTitle.number} - ${currentTitle.name}` : \"Sin título\",\n        capitulo: currentChapter.number ? `Capítulo ${currentChapter.number} - ${currentChapter.name}` : \"Sin capítulo\"\n      }\n    });\n    \n    i = j - 1; // Saltar líneas ya procesadas\n  }\n}\n\nreturn sections;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        -60
+      ],
+      "id": "da1070d3-2788-4b76-ac5b-a2975e9784fd",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un asistente legal especializado en la Constitución Política de Colombia de 1991 y normativa relacionada. Tu rol es brindar información clara y precisa a los usuarios sobre sus consultas legales, citando los artículos pertinentes y explicándolos en lenguaje sencillo. Ten presente siempre lo que te pregunta: {{ $json.chatInput }}\n\n**Instrucciones:**\n1. **Base legal**: Responde ÚNICAMENTE con información verificada en la Constitución de 1991 o leyes colombianas cargadas en el sistema. \n2. **Precisión**: Si un artículo no existe o la consulta está fuera del ámbito legal colombiano, indica: \"No encuentro disposiciones legales aplicables en mi base de datos\".\n3. **Claridad**: Desglosa los artículos citados y explica cómo aplican al caso del usuario. \n4. **Advertencia**: Aclara que tu orientación es informativa, no sustituye asesoría jurídica profesional. \n5. **Ejemplo de respuesta:**\n   \"Según el Artículo 11 de la Constitución Colombiana, el derecho a la vida es inviolable. Esto significa que... Para casos específicos, recomiendo consultar a un abogado.\"\n\n**Formato de respuesta:**\n- **Artículo Citado**: [Número y tema]\n- **Explicación**: [2-3 líneas en lenguaje no técnico]\n- **Nota**: \"Esta respuesta se basa en la normativa colombiana vigente. Para aplicación práctica, consulte a un profesional del derecho.\"\n\nNUNCA DEBERAS DECIR LO SIGUIENTE: No puedo proporcionar una respuesta. Siempre debes dar una respuesta que aporte al cliente.\nSiempre deberias utilizar la herramienta de Think y de Documet Vector.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -240,
+        340
+      ],
+      "id": "299bdc9d-4ebe-4229-963c-32d0d5bebc56",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        580
+      ],
+      "id": "22530515-16c4-4bf1-b797-f84e7462fc9a",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -440,
+        340
+      ],
+      "id": "47939138-36c0-4666-9e91-a677b1aec1e5",
+      "name": "When chat message received",
+      "webhookId": "9e77b58b-05f2-417b-8bd4-1d3fa5b4522e"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        100,
+        740
+      ],
+      "id": "d14bddef-dd5c-444b-b786-1205421ee9cf",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        560
+      ],
+      "id": "3da6d059-95cd-43ef-96e2-60933b80da8d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "Documentos",
+        "toolDescription": "Base de datos de documentos sobre leyes y política para dar contexto al modelo.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "documents_rag2",
+          "mode": "list",
+          "cachedResultName": "documents_rag2"
+        },
+        "topK": 8,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        520
+      ],
+      "id": "891ae8d0-3e3c-42cd-9861-8f8f58d3799f",
+      "name": "Documet Vector",
+      "credentials": {
+        "qdrantApi": {
+          "id": "sFfERYppMeBnFNeA",
+          "name": "Local QdrantApi database"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Qdrant Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Documet Vector",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documet Vector": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7cb00355-def5-4612-a8a4-0b69f7f1889f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "MvqNnmYFkx5BBk5g",
+  "tags": []
+}
