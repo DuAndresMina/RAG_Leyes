@@ -2,7 +2,7 @@
 
 Sistema de consultas legales basado en RAG (Retrieval-Augmented Generation) implementado con n8n. Analiza documentos legales colombianos y provee respuestas contextualizadas usando modelos de IA local.
 
-![Flujo en n8n](screenshot\image.png)
+![Flujo en n8n]([screenshot\image.png](https://github.com/DuAndresMina/RAG_Leyes/blob/master/screenshot/image.png))
 
 ## Características Principales
 - 🔍 Búsqueda semántica en documentos legales
